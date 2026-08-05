@@ -49,9 +49,9 @@ export default function ExplanationPanel({
           <span>EXPLICACIÓN TÉCNICA:</span>
         </div>
 
-        {/* Contenedor w-full con text-justify, font-sans, leading-relaxed y border-l-4 border-neon-cyan */}
-        <div className="w-full bg-cyber-950/80 border border-cyber-border rounded-lg p-4 font-sans text-lg text-slate-300 leading-7 text-left border-l-4 border-neon-cyan pl-4 shadow-inner">
-          {explanation ? explanation.replace(/\n/g, ' ') : 'Sin explicación detallada registrada para esta pregunta.'}
+        {/* Contenedor con soporte para salto de línea y párrafos explicativos */}
+        <div className="w-full bg-cyber-950/80 border border-cyber-border rounded-lg p-4 font-sans text-sm md:text-base text-slate-300 leading-relaxed text-left border-l-4 border-neon-cyan shadow-inner whitespace-pre-line">
+          {explanation || 'Sin explicación detallada registrada para esta pregunta.'}
         </div>
       </div>
 

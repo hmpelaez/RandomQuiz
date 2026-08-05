@@ -156,8 +156,6 @@ export default function QuizEngine({
           selectedOption={selectedOption}
           correctAnswer={currentQuestion.correctAnswer}
           explanation={currentQuestion.explanation}
-          onNext={handleNext}
-          isLastQuestion={isLastQuestion}
         />
       )}
 
@@ -167,8 +165,8 @@ export default function QuizEngine({
           onClick={handlePrev}
           className="px-5 py-2.5 rounded-xl border border-neon-cyan bg-cyan-950/40 text-neon-cyan hover:bg-cyan-900/60 shadow-neon-cyan cursor-pointer font-bold flex items-center space-x-2 transition-all"
         >
+          <ChevronLeft className="w-4 h-4" />
           <span>Anterior</span>
-          <ChevronRight className="w-4 h-4" />
         </button>
 
         <button
@@ -183,4 +181,3 @@ export default function QuizEngine({
     </div>
   );
 }
-<span>Anterior</span>

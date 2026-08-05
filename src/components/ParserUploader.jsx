@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Play, CheckCircle2, AlertTriangle, Terminal, Zap, Code, Shuffle, Layers, Layers3 } from 'lucide-react';
+import { Upload, FileText, Play, CheckCircle2, AlertTriangle, Terminal, Zap, Code, Shuffle, Layers3 } from 'lucide-react';
 import { parseQnAFormat, SAMPLE_EXAMS } from '../utils/parser';
 import { soundFx } from '../utils/sound';
 
@@ -51,6 +51,9 @@ export default function ParserUploader({ onExamParsed }) {
       setInputText(content);
       setStandardParseResult(parseQnAFormat(content));
     };
+    reader.onerror = () => {
+      setStandardParseResult({ success: false, questions: [], error: 'Error al leer el archivo.' });
+    };
     reader.readAsText(file);
   };
 
@@ -66,7 +69,8 @@ export default function ParserUploader({ onExamParsed }) {
       filesArray.map(file => {
         return new Promise((resolve) => {
           const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
+          reader.onload = (e) => resolve(e.target.result || '');
+          reader.onerror = () => resolve('');
           reader.readAsText(file);
         });
       })

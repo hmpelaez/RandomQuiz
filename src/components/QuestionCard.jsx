@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, Check, X, Terminal, Cpu } from 'lucide-react';
+import { Check, X, Terminal, Cpu } from 'lucide-react';
 import { soundFx } from '../utils/sound';
 
 export default function QuestionCard({

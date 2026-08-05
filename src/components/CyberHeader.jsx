@@ -1,5 +1,5 @@
 import React from 'react';
-import { Terminal, Shield, Volume2, VolumeX, RotateCcw, Upload, Activity, Clock } from 'lucide-react';
+import { Terminal, Shield, Volume2, VolumeX, RotateCcw, Upload, Clock } from 'lucide-react';
 import { soundFx } from '../utils/sound';
 
 export default function CyberHeader({ 
@@ -75,11 +75,32 @@ export default function CyberHeader({
 
         {/* Action Controls */}
         <div className="flex items-center space-x-2">
+          {mode === 'quiz' && (
+            <>
+              <button
+                onClick={onResetExam}
+                title="Reiniciar Examen Actual"
+                className="px-3 py-1.5 rounded border border-cyber-border font-mono text-xs text-slate-300 bg-cyber-900 hover:border-neon-cyan hover:text-neon-cyan flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reiniciar</span>
+              </button>
+              <button
+                onClick={onLoadNew}
+                title="Cargar Nuevo Examen"
+                className="px-3 py-1.5 rounded border border-cyber-border font-mono text-xs text-slate-300 bg-cyber-900 hover:border-neon-cyan hover:text-neon-cyan flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Cargar Otro</span>
+              </button>
+            </>
+          )}
+
           {/* Sound Toggle */}
           <button
             onClick={handleToggleSound}
             title={soundEnabled ? "Desactivar Sonido" : "Activar Sonido Cyber"}
-            className={`p-2 rounded border font-mono text-xs flex items-center transition-all ${
+            className={`p-2 rounded border font-mono text-xs flex items-center transition-all cursor-pointer ${
               soundEnabled
                 ? 'border-neon-cyan/40 text-neon-cyan bg-cyan-950/20 hover:bg-cyan-900/40 shadow-neon-cyan'
                 : 'border-slate-700 text-slate-500 bg-cyber-900 hover:text-slate-300'

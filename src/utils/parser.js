@@ -34,25 +34,22 @@ export function parseQnAFormat(text) {
   // 2. Parsear la sección de Preguntas
   // Buscar patrones como: 1. Texto de la pregunta... A. Opcion A... B. Opcion B...
   // Dividimos la sección de preguntas por número de pregunta (ej: "1.", "Question 1:", "1)")
-  const qSplitRegex = /(?:^|\n)(?:Q(?:uestion)?\s*)?(\d+)[\.\:\)]\s+/i;
-  
-  const rawQChunks = questionsPart.split(/(?:^|\n)(?=(?:Q(?:uestion)?\s*)?\d+[\.\:\)]\s+)/i).filter(c => c.trim().length > 0);
+  const rawQChunks = questionsPart.split(/(?:^|\n)(?=(?:Q(?:uestion)?\s*)?\d+[.:)]\s+)/i).filter(c => c.trim().length > 0);
 
-  const parsedQuestionsMap = new Map();
+  const questionsList = [];
+  const qNumIndexMap = new Map();
 
-  rawQChunks.forEach(chunk => {
-    const headerMatch = chunk.match(/^(?:Q(?:uestion)?\s*)?(\d+)[\.\:\)]\s+([\s\S]+)$/i);
+  rawQChunks.forEach((chunk, idx) => {
+    const headerMatch = chunk.match(/^(?:Q(?:uestion)?\s*)?(\d+)[.:)]\s+([\s\S]+)$/i);
     if (!headerMatch) return;
 
     const qNum = parseInt(headerMatch[1], 10);
     const body = headerMatch[2].trim();
 
     // Extraer opciones (A., B., C., D., etc.)
-    // Separar la pregunta de las opciones
-    const optionMatches = [...body.matchAll(/(?:^|\n)\s*([A-E])[\.\:\)]\s*([^\n]+(?:\n(?![A-E][\.\:\)]|\d+[\.\:\)]).*)*)/gi)];
+    const optionMatches = [...body.matchAll(/(?:^|\n)\s*([A-E])[.:)]\s*([^\n]+(?:\n(?![A-E][.:)]|\d+[.:)]).*)*)/gi)];
 
     if (optionMatches.length === 0) {
-      // Si no hace match multilínea estricto, intentamos regex alternativa por líneas
       return;
     }
 
@@ -65,17 +62,24 @@ export function parseQnAFormat(text) {
       text: m[2].replace(/\s+/g, ' ').trim()
     }));
 
-    parsedQuestionsMap.set(qNum, {
-      id: qNum,
+    const qObj = {
+      id: idx + 1,
       number: qNum,
       question: questionPrompt,
       options: options,
       correctAnswer: null,
       explanation: ''
-    });
+    };
+
+    questionsList.push(qObj);
+
+    if (!qNumIndexMap.has(qNum)) {
+      qNumIndexMap.set(qNum, []);
+    }
+    qNumIndexMap.get(qNum).push(qObj);
   });
 
-  if (parsedQuestionsMap.size === 0) {
+  if (questionsList.length === 0) {
     return {
       success: false,
       questions: [],
@@ -85,33 +89,33 @@ export function parseQnAFormat(text) {
 
   // 3. Parsear la sección de Respuestas y Explicaciones
   // Buscar patrones como: 1. B Explicación... o 1. Answer: C \n Explicación completa
-  const ansBlocks = answersPart.split(/(?:^|\n)(?=(?:Q(?:uestion)?\s*)?\d+[\.\:\)]\s+[A-E])/i).filter(a => a.trim().length > 0);
+  const ansBlocks = answersPart.split(/(?:^|\n)(?=(?:Q(?:uestion)?\s*)?\d+[.:)]\s+(?:Answer\s*:?\s*)?[A-E])/i).filter(a => a.trim().length > 0);
 
   ansBlocks.forEach(block => {
-    // Coincide con: 1. B [parrafo explicativo completo]
-    const matchAns = block.match(/^(?:Q(?:uestion)?\s*)?(\d+)[\.\:\)]\s*([A-E])[\.\:\)]?\s*(.*(?:\n.*)*)$/i);
+    // Coincide con: 1. B [parrafo] o 1. Answer: B [parrafo]
+    const matchAns = block.match(/^(?:Q(?:uestion)?\s*)?(\d+)[.:)]\s*(?:Answer\s*:?\s*)?([A-E])[.:)]?\s*(.*(?:\n.*)*)$/i);
 
     if (matchAns) {
       const qNum = parseInt(matchAns[1], 10);
       const letter = matchAns[2].toUpperCase();
       const explanation = matchAns[3].trim();
 
-      if (parsedQuestionsMap.has(qNum)) {
-        const qObj = parsedQuestionsMap.get(qNum);
-        qObj.correctAnswer = letter;
-        qObj.explanation = explanation || 'Sin explicación detallada disponible.';
+      const targetList = qNumIndexMap.get(qNum);
+      if (targetList && targetList.length > 0) {
+        const targetQ = targetList.find(q => q.correctAnswer === null) || targetList[0];
+        targetQ.correctAnswer = letter;
+        targetQ.explanation = explanation || 'Sin explicación detallada disponible.';
       }
     }
   });
 
-  const finalQuestions = Array.from(parsedQuestionsMap.values());
-  const missingAnswersCount = finalQuestions.filter(q => !q.correctAnswer).length;
+  const missingAnswersCount = questionsList.filter(q => !q.correctAnswer).length;
 
   return {
     success: true,
-    questions: finalQuestions,
+    questions: questionsList,
     missingAnswersCount,
-    totalCount: finalQuestions.length,
+    totalCount: questionsList.length,
     error: null
   };
 }

@@ -18,15 +18,12 @@ export default function StatsPanel({
   
   let correctCount = 0;
   let incorrectCount = 0;
-  let unansweredCount = 0;
 
   questions.forEach((q, idx) => {
     const userAns = userAnswers[idx];
-    if (!userAns) {
-      unansweredCount++;
-    } else if (userAns === q.correctAnswer) {
+    if (userAns === q.correctAnswer) {
       correctCount++;
-    } else {
+    } else if (userAns) {
       incorrectCount++;
     }
   });
@@ -43,7 +40,7 @@ export default function StatsPanel({
           spread: 70,
           origin: { y: 0.6 }
         });
-      } catch (e) {
+      } catch {
         // ignore
       }
     }
