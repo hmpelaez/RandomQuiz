@@ -1,7 +1,6 @@
 import React from 'react';
 import { Terminal, Shield, Volume2, VolumeX, RotateCcw, Upload, Clock } from 'lucide-react';
 import { soundFx } from '../utils/sound';
-import { THEMES } from '../utils/theme';
 
 export default function CyberHeader({ 
   soundEnabled, 
@@ -12,9 +11,7 @@ export default function CyberHeader({
   currentIndex,
   score,
   elapsedTime,
-  mode,
-  accentTheme,
-  setAccentTheme
+  mode
 }) {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -98,22 +95,6 @@ export default function CyberHeader({
               </button>
             </>
           )}
-
-          {/* Theme Selector Pills */}
-          <div className="flex items-center space-x-1 border-r border-cyber-border pr-2 mr-1">
-            {Object.values(THEMES).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setAccentTheme(t.id)}
-                title={t.name}
-                className={`w-4 h-4 rounded-full border transition-all cursor-pointer ${
-                  accentTheme === t.id ? 'scale-125 ring-2 ring-white/50' : 'opacity-60 hover:opacity-100'
-                }`}
-                style={{ backgroundColor: t.color, borderColor: t.color }}
-              />
-            ))}
-          </div>
 
           {/* Sound Toggle */}
           <button

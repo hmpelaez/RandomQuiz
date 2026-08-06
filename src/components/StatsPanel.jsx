@@ -101,10 +101,10 @@ export default function StatsPanel({
           </div>
           <div>
             <h1 className="text-lg font-mono font-bold text-slate-100 uppercase tracking-wider">
-              PANEL DE RENDIMIENTO CYBER-BENTO
+              PANEL DE RENDIMIENTO
             </h1>
             <p className="text-xs font-mono text-slate-400">
-              Evaluación diagnóstica CEH v12 & Metadatos de desempeño
+              Evaluación diagnóstica de desempeño
             </p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, FileText, Play, CheckCircle2, AlertTriangle, Terminal, Zap, Shuffle, Layers3 } from 'lucide-react';
-import { parseQnAFormat, SAMPLE_EXAMS } from '../utils/parser';
+import { parseQnAFormat } from '../utils/parser';
 import { soundFx } from '../utils/sound';
 
 // Algoritmo de Mezcla Aleatoria Fisher-Yates
@@ -33,11 +33,7 @@ export default function ParserUploader({ onExamParsed }) {
 
   const [dragActive, setDragActive] = useState(false);
 
-  // MANEJADOR MODO ESTÁNDAR (Carga rápida examen ejemplo)
-  const handleLoadSample = (sampleText) => {
-    soundFx.playClick();
-    setStandardParseResult(parseQnAFormat(sampleText));
-  };
+
 
   // MANEJADOR MODO ESTÁNDAR (Un solo archivo)
   const handleSingleFileUpload = (file) => {
@@ -290,14 +286,6 @@ export default function ParserUploader({ onExamParsed }) {
                   onChange={(e) => e.target.files && handleSingleFileUpload(e.target.files[0])}
                 />
               </label>
-
-              <button
-                type="button"
-                onClick={() => handleLoadSample(SAMPLE_EXAMS[0].text)}
-                className="px-4 py-2.5 rounded-lg border border-cyber-border text-slate-300 bg-cyber-900 hover:border-neon-cyan/50 hover:text-neon-cyan text-xs font-semibold transition-all cursor-pointer"
-              >
-                Examen de Prueba (CEH v12)
-              </button>
             </div>
           </div>
         </div>
