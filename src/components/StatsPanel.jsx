@@ -13,65 +13,11 @@ import {
   Clock,
   Zap,
   Target,
-  Search,
-  Globe,
-  Lock,
-  Shield,
-  Bug,
-  Activity,
-  Layers
+  Activity
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundFx } from '../utils/sound';
 import { getThemeClasses } from '../utils/theme';
-
-const DOMAIN_DEFINITIONS = [
-  {
-    id: 'recon',
-    name: 'Reconnaissance & Scanning',
-    shortName: 'Reconnaissance',
-    icon: Search,
-    color: 'text-cyan-400',
-    barBg: 'bg-cyan-500',
-    keywords: ['nmap', 'scan', 'recon', 'footprint', 'enum', 'osint', 'whois', 'shodan', 'ping', 'banner', 'zone transfer', 'reconnaissance', 'passive', 'active scanning']
-  },
-  {
-    id: 'web',
-    name: 'Web Application Security',
-    shortName: 'Web Security',
-    icon: Globe,
-    color: 'text-amber-400',
-    barBg: 'bg-amber-500',
-    keywords: ['web', 'sql', 'xss', 'csrf', 'http', 'html', 'owasp', 'cookie', 'session', 'injection', 'dirbuster', 'burp', 'lfi', 'rfi', 'parameter']
-  },
-  {
-    id: 'crypto',
-    name: 'Cryptography & PKI',
-    shortName: 'Cryptography',
-    icon: Lock,
-    color: 'text-purple-400',
-    barBg: 'bg-purple-500',
-    keywords: ['crypto', 'rsa', 'aes', 'hash', 'encrypt', 'cipher', 'des', 'sha', 'pki', 'ssl', 'tls', 'key', 'signature', 'md5', 'asymmetric', 'symmetric']
-  },
-  {
-    id: 'protocols',
-    name: 'Network Protocols & Infra',
-    shortName: 'Network Protocols',
-    icon: Shield,
-    color: 'text-blue-400',
-    barBg: 'bg-blue-500',
-    keywords: ['tcp', 'udp', 'ip', 'arp', 'icmp', 'dns', 'dhcp', 'port', 'packet', 'wireshark', 'syn', 'handshake', 'ethernet', 'subnet', 'vlan', 'router', 'switch', 'protocol', 'network']
-  },
-  {
-    id: 'malware',
-    name: 'Malware & Threats',
-    shortName: 'Malware',
-    icon: Bug,
-    color: 'text-rose-400',
-    barBg: 'bg-rose-500',
-    keywords: ['malware', 'trojan', 'virus', 'worm', 'ransomware', 'spyware', 'rootkit', 'botnet', 'payload', 'backdoor', 'keylogger', 'obfuscation']
-  }
-];
 
 export default function StatsPanel({
   questions = [],
@@ -126,51 +72,6 @@ export default function StatsPanel({
   };
 
   const avgSecondsPerQ = totalQuestions > 0 ? (elapsedTime / totalQuestions).toFixed(1) : '0.0';
-
-  // Domain Categorization & Analytics
-  const domainStats = DOMAIN_DEFINITIONS.map((dom) => {
-    const domQuestions = questions.filter((q, idx) => {
-      if (q.domain && (q.domain.toLowerCase().includes(dom.id) || q.domain.toLowerCase().includes(dom.shortName.toLowerCase()))) {
-        return true;
-      }
-      const text = `${q.question || ''} ${q.explanation || ''} ${(q.options || []).map(o => o.text).join(' ')}`.toLowerCase();
-      
-      let bestDomain = null;
-      let maxMatches = 0;
-
-      DOMAIN_DEFINITIONS.forEach(d => {
-        let matches = 0;
-        d.keywords.forEach(kw => {
-          if (text.includes(kw)) matches++;
-        });
-        if (matches > maxMatches) {
-          maxMatches = matches;
-          bestDomain = d.id;
-        }
-      });
-
-      const assignedId = bestDomain || DOMAIN_DEFINITIONS[idx % DOMAIN_DEFINITIONS.length].id;
-      return assignedId === dom.id;
-    });
-
-    let domCorrect = 0;
-    domQuestions.forEach((q) => {
-      const originalIdx = questions.indexOf(q);
-      if (userAnswers[originalIdx] === q.correctAnswer) {
-        domCorrect++;
-      }
-    });
-
-    const domTotal = domQuestions.length;
-    const domAccuracy = domTotal > 0 ? Math.round((domCorrect / domTotal) * 100) : 0;
-
-    return {
-      ...dom,
-      total: domTotal,
-      correct: domCorrect,
-      accuracy: domAccuracy
-    };
-  });
 
   const filteredQuestions = questions
     .map((q, idx) => ({
@@ -407,70 +308,7 @@ export default function StatsPanel({
           </div>
         </div>
 
-        {/* CARD 4: Span 4 / Full width - CEH Domain Breakdown */}
-        <div className="col-span-1 md:col-span-2 lg:col-span-4 bg-cyber-900/80 border border-cyber-border rounded-2xl p-6 shadow-cyber-card space-y-4">
-          <div className="flex items-center justify-between border-b border-cyber-border pb-3">
-            <div className="flex items-center space-x-2 font-mono">
-              <Layers className={`w-5 h-5 ${theme.text}`} />
-              <h2 className="text-sm md:text-base font-bold text-slate-100 tracking-wider">
-                ANÁLISIS DE RENDIMIENTO POR DOMINIO CEH v12
-              </h2>
-            </div>
-            <span className="text-xs font-mono text-slate-400 hidden sm:inline-block">
-              CATEGORIZACIÓN AUTOMÁTICA DE DOMINIOS
-            </span>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {domainStats.map((dom) => {
-              const IconComp = dom.icon;
-              const statusTag =
-                dom.accuracy >= 80
-                  ? { text: 'DOMINADO', cls: 'bg-emerald-950/80 text-neon-green border-neon-green/40' }
-                  : dom.accuracy >= 60
-                  ? { text: 'ACEPTABLE', cls: 'bg-amber-950/80 text-amber-400 border-amber-500/40' }
-                  : { text: 'REFORZAR', cls: 'bg-rose-950/80 text-neon-red border-neon-red/40' };
-
-              return (
-                <div
-                  key={dom.id}
-                  className="bg-cyber-950/90 border border-cyber-border/80 rounded-xl p-4 flex flex-col justify-between space-y-3 hover:border-cyber-border transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="p-2 rounded-lg bg-cyber-900 border border-cyber-border">
-                      <IconComp className={`w-4 h-4 ${dom.color}`} />
-                    </div>
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${statusTag.cls}`}>
-                      {statusTag.text}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xs font-mono font-bold text-slate-200 line-clamp-1">
-                      {dom.shortName}
-                    </h3>
-                    <span className="text-[11px] font-mono text-slate-400 block mt-0.5">
-                      {dom.correct}/{dom.total} correctas
-                    </span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between font-mono text-[10px]">
-                      <span className="text-slate-500">PRECISIÓN</span>
-                      <span className="text-slate-300 font-bold">{dom.accuracy}%</span>
-                    </div>
-                    <div className="w-full bg-cyber-900 h-1.5 rounded-full overflow-hidden border border-cyber-border/60">
-                      <div
-                        className={`h-full ${dom.barBg} transition-all duration-500`}
-                        style={{ width: `${dom.accuracy}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* CARD 5: Span 4 / Full width - Interactive Question Reviewer */}
         <div className="col-span-1 md:col-span-2 lg:col-span-4 bg-cyber-900/80 border border-cyber-border rounded-2xl p-6 shadow-cyber-card space-y-4">
