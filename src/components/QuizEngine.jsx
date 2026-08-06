@@ -15,7 +15,8 @@ export default function QuizEngine({
   setIsFinished,
   onReset,
   onLoadNew,
-  elapsedTime
+  elapsedTime,
+  accentTheme = 'cyan'
 }) {
   const [showNavGrid, setShowNavGrid] = useState(false);
 
@@ -65,6 +66,7 @@ export default function QuizEngine({
         onResetExam={onReset}
         onLoadNew={onLoadNew}
         onRetryIncorrect={handleRetryIncorrect}
+        accentTheme={accentTheme}
       />
     );
   }
