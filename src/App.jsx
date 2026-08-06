@@ -12,6 +12,7 @@ export default function App() {
   const [isFinished, setIsFinished] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [accentTheme, setAccentTheme] = useState('cyan');
 
   // 1. Frenar el Temporizador cuando isFinished sea true
   useEffect(() => {
@@ -76,12 +77,14 @@ export default function App() {
         score={score}
         elapsedTime={elapsedTime}
         mode={mode}
+        accentTheme={accentTheme}
+        setAccentTheme={setAccentTheme}
       />
 
       {/* Main Content View Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8">
         {mode === 'upload' ? (
-          <ParserUploader onExamParsed={handleExamParsed} />
+          <ParserUploader onExamParsed={handleExamParsed} accentTheme={accentTheme} />
         ) : (
           <QuizEngine
             questions={questions}
@@ -94,6 +97,7 @@ export default function App() {
             onReset={handleResetExam}
             onLoadNew={handleLoadNew}
             elapsedTime={elapsedTime}
+            accentTheme={accentTheme}
           />
         )}
       </main>
