@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FileText, Play, CheckCircle2, AlertTriangle, Terminal, Zap, Code, Shuffle, Layers3 } from 'lucide-react';
+import { Upload, FileText, Play, CheckCircle2, AlertTriangle, Terminal, Zap, Shuffle, Layers3 } from 'lucide-react';
 import { parseQnAFormat, SAMPLE_EXAMS } from '../utils/parser';
 import { soundFx } from '../utils/sound';
 
@@ -20,8 +20,7 @@ export default function ParserUploader({ onExamParsed }) {
   const [opMode, setOpMode] = useState('standard');
 
   // Estado para Modo Estándar
-  const [inputText, setInputText] = useState(SAMPLE_EXAMS[0].text);
-  const [standardParseResult, setStandardParseResult] = useState(() => parseQnAFormat(SAMPLE_EXAMS[0].text));
+  const [standardParseResult, setStandardParseResult] = useState({ success: false, questions: [], error: null });
 
   // Estado para Modo Simulador Aleatorio Multi-archivo
   const [finalQuizQuestions, setFinalQuizQuestions] = useState([]);
@@ -34,11 +33,10 @@ export default function ParserUploader({ onExamParsed }) {
 
   const [dragActive, setDragActive] = useState(false);
 
-  // MANEJADOR MODO ESTÁNDAR (Texto)
-  const handleTextChange = (e) => {
-    const val = e.target.value;
-    setInputText(val);
-    setStandardParseResult(parseQnAFormat(val));
+  // MANEJADOR MODO ESTÁNDAR (Carga rápida examen ejemplo)
+  const handleLoadSample = (sampleText) => {
+    soundFx.playClick();
+    setStandardParseResult(parseQnAFormat(sampleText));
   };
 
   // MANEJADOR MODO ESTÁNDAR (Un solo archivo)
@@ -48,7 +46,6 @@ export default function ParserUploader({ onExamParsed }) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target.result;
-      setInputText(content);
       setStandardParseResult(parseQnAFormat(content));
     };
     reader.onerror = () => {
@@ -168,7 +165,7 @@ export default function ParserUploader({ onExamParsed }) {
         <div className="relative z-10 space-y-2">
           <div className="flex items-center space-x-2 text-neon-cyan text-sm">
             <Zap className="w-4 h-4 text-neon-yellow" />
-            <span>MÓDULO DE INGESTA DE DATOS Y EXTRACCIÓN REGEX</span>
+            <span>MÓDULO DE INGESTA Y EXTRACCIÓN DE DATOS</span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-100 tracking-tight">
             SELECCIONA EL MODO DE OPERACIÓN
@@ -209,7 +206,7 @@ export default function ParserUploader({ onExamParsed }) {
             )}
           </div>
           <p className="text-xs font-sans text-slate-400 leading-relaxed">
-            Carga un solo archivo plano (.txt / .md) o pega texto directamente. Ideal para practicar exámenes en su orden original.
+            Carga un solo archivo plano. Ideal para practicar exámenes.
           </p>
         </button>
 
@@ -240,59 +237,102 @@ export default function ParserUploader({ onExamParsed }) {
             )}
           </div>
           <p className="text-xs font-sans text-slate-400 leading-relaxed">
-            Carga múltiples archivos a la vez. El sistema extrae el banco completo, lo mezcla aleatoriamente y selecciona un máximo de 125 preguntas.
+            Carga múltiples archivos a la vez. El sistema extrae el banco completo, lo mezcla aleatoriamente.
           </p>
         </button>
 
       </div>
 
-      {/* Input Grid según Modo Seleccionado */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Dropzone File Upload */}
-        <div className="md:col-span-1 flex flex-col">
-          <label className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
-            <Upload className={`w-3.5 h-3.5 ${opMode === 'standard' ? 'text-neon-cyan' : 'text-neon-magenta'}`} />
-            <span>{opMode === 'standard' ? 'SUBIR ARCHIVO ÚNICO (.TXT / .MD)' : 'SUBIR MÚLTIPLES ARCHIVOS (.TXT / .MD)'}</span>
-          </label>
+      {/* Input Grid / Container según Modo Seleccionado */}
+      {opMode === 'standard' ? (
+        /* MODO ESTÁNDAR: Contenedor centrado max-w-2xl */
+        <div className="max-w-2xl mx-auto w-full flex flex-col space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-slate-400 flex items-center gap-1.5">
+              <Upload className="w-3.5 h-3.5 text-neon-cyan" />
+              <span>SUBIR ARCHIVO</span>
+            </label>
+            {standardParseResult.success && (
+              <span className="text-neon-green text-xs font-bold font-mono">
+                {standardParseResult.questions.length} preguntas listadas
+              </span>
+            )}
+          </div>
 
           <div
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
             onDrop={handleDrop}
-            className={`flex-1 border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all ${
+            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all ${
               dragActive
-                ? opMode === 'standard' ? 'border-neon-cyan bg-cyan-950/40 shadow-neon-cyan' : 'border-neon-magenta bg-rose-950/40 shadow-neon-magenta'
+                ? 'border-neon-cyan bg-cyan-950/40 shadow-neon-cyan'
                 : 'border-cyber-border bg-cyber-900/40 hover:border-slate-600 hover:bg-cyber-900'
             }`}
           >
-            <div className={`p-3 bg-cyber-950 rounded-full border mb-3 ${opMode === 'standard' ? 'border-neon-cyan/40 text-neon-cyan' : 'border-neon-magenta/40 text-neon-magenta'}`}>
-              {opMode === 'standard' ? <FileText className="w-8 h-8 animate-pulse" /> : <Layers3 className="w-8 h-8 animate-pulse" />}
+            <div className="p-4 bg-cyber-950 rounded-full border border-neon-cyan/40 text-neon-cyan mb-3">
+              <FileText className="w-10 h-10 animate-pulse" />
             </div>
             
-            <p className="text-sm text-slate-200 font-semibold mb-1">
-              {opMode === 'standard' ? 'Arrastra tu archivo aquí' : 'Arrastra múltiples archivos aquí'}
+            <p className="text-base text-slate-200 font-semibold mb-1">
+              Arrastra tu archivo aquí
             </p>
-            <p className="text-xs text-slate-500 mb-4 font-sans">
-              {opMode === 'standard' ? 'Soporta archivos plano .txt o .md' : 'Selecciona varios archivos a la vez'}
+            <p className="text-xs text-slate-500 mb-5 font-sans max-w-sm">
+              Soporta archivos de texto plano (.txt o .md) con formato QUESTIONS y ANSWERS.
             </p>
 
-            <label className={`px-4 py-2 rounded border text-xs font-semibold transition-all cursor-pointer ${
-              opMode === 'standard'
-                ? 'border-neon-cyan/40 text-neon-cyan bg-cyan-950/30 hover:bg-cyan-900/50'
-                : 'border-neon-magenta/40 text-neon-magenta bg-rose-950/30 hover:bg-rose-900/50'
-            }`}>
-              <span>{opMode === 'standard' ? 'Seleccionar Archivo' : 'Seleccionar Varios Archivos'}</span>
-              
-              {/* Input file según modo (single vs multiple) */}
-              {opMode === 'standard' ? (
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <label className="px-5 py-2.5 rounded-lg border border-neon-cyan/40 text-neon-cyan bg-cyan-950/30 hover:bg-cyan-900/50 text-xs font-semibold transition-all cursor-pointer shadow-neon-cyan/20">
+                <span>Seleccionar Archivo</span>
                 <input
                   type="file"
                   accept=".txt,.md,.raw"
                   className="hidden"
                   onChange={(e) => e.target.files && handleSingleFileUpload(e.target.files[0])}
                 />
-              ) : (
+              </label>
+
+              <button
+                type="button"
+                onClick={() => handleLoadSample(SAMPLE_EXAMS[0].text)}
+                className="px-4 py-2.5 rounded-lg border border-cyber-border text-slate-300 bg-cyber-900 hover:border-neon-cyan/50 hover:text-neon-cyan text-xs font-semibold transition-all cursor-pointer"
+              >
+                Examen de Prueba (CEH v12)
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* MODO ALEATORIO MULTI-ARCHIVO: Grid de 3 columnas (Dropzone + Resumen Ingesta) */
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1 flex flex-col">
+            <label className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
+              <Upload className="w-3.5 h-3.5 text-neon-magenta" />
+              <span>SUBIR MÚLTIPLES ARCHIVOS</span>
+            </label>
+
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={handleDrop}
+              className={`flex-1 border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all ${
+                dragActive
+                  ? 'border-neon-magenta bg-rose-950/40 shadow-neon-magenta'
+                  : 'border-cyber-border bg-cyber-900/40 hover:border-slate-600 hover:bg-cyber-900'
+              }`}
+            >
+              <div className="p-3 bg-cyber-950 rounded-full border border-neon-magenta/40 text-neon-magenta mb-3">
+                <Layers3 className="w-8 h-8 animate-pulse" />
+              </div>
+              
+              <p className="text-sm text-slate-200 font-semibold mb-1">
+                Arrastra múltiples archivos aquí
+              </p>
+              <p className="text-xs text-slate-500 mb-4 font-sans">
+                Selecciona varios archivos a la vez
+              </p>
+
+              <label className="px-4 py-2 rounded border border-neon-magenta/40 text-neon-magenta bg-rose-950/30 hover:bg-rose-900/50 text-xs font-semibold transition-all cursor-pointer">
+                <span>Seleccionar Varios Archivos</span>
                 <input
                   type="file"
                   accept=".txt,.md,.raw"
@@ -300,35 +340,11 @@ export default function ParserUploader({ onExamParsed }) {
                   className="hidden"
                   onChange={(e) => e.target.files && handleMultiFilesProcess(e.target.files)}
                 />
-              )}
-            </label>
+              </label>
+            </div>
           </div>
-        </div>
 
-        {/* Editor de Texto (Modo Estándar) / Visor de Ingesta (Modo Simulador Aleatorio) */}
-        <div className="md:col-span-2 flex flex-col">
-          {opMode === 'standard' ? (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs text-slate-400 flex items-center gap-1.5">
-                  <Code className="w-3.5 h-3.5 text-neon-cyan" />
-                  <span>PEGAR / EDITAR ESTRUCTURA DE EXAMEN</span>
-                </label>
-                <span className="text-[11px] text-slate-500">
-                  {inputText.length} caracteres
-                </span>
-              </div>
-              <div className="relative flex-1">
-                <textarea
-                  value={inputText}
-                  onChange={handleTextChange}
-                  placeholder="PEGA AQUÍ EL TEXTO DEL EXAMEN CON SECCIONES QUESTIONS Y ANSWERS..."
-                  className="w-full h-80 md:h-full min-h-[280px] bg-cyber-950 border border-cyber-border rounded-xl p-4 text-xs text-slate-200 focus:outline-none focus:border-neon-cyan resize-y cyber-scanline"
-                  spellCheck="false"
-                />
-              </div>
-            </>
-          ) : (
+          <div className="md:col-span-2 flex flex-col">
             <div className="flex flex-col h-full justify-between bg-cyber-950 border border-cyber-border rounded-xl p-6 space-y-4">
               <div className="flex items-center space-x-2 text-neon-magenta text-xs font-bold border-b border-cyber-border pb-3">
                 <Shuffle className="w-4 h-4" />
@@ -356,14 +372,13 @@ export default function ParserUploader({ onExamParsed }) {
                   <li>Lectura paralela e ingesta mediante parser regex de todos los archivos.</li>
                   <li>Mezcla aleatoria del banco global con algoritmo Fisher-Yates.</li>
                   <li>Recorte automático a un tope máximo de 125 preguntas seleccionadas.</li>
-                  <li>Re-indexación correlativa de preguntas (#1 a #{multiMetrics.finalSelectedCount || 0}).</li>
+                  <li>Re-indexación correlativa de preguntas.</li>
                 </ul>
               </div>
             </div>
-          )}
+          </div>
         </div>
-
-      </div>
+      )}
 
       {/* ESTADO DE LA EXTRACCIÓN DE DATOS */}
       <div className="bg-cyber-900/80 border border-cyber-border rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -380,8 +395,8 @@ export default function ParserUploader({ onExamParsed }) {
             )}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-slate-100">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-slate-400 font-bold">
                 ESTADO DE LA EXTRACCIÓN DE DATOS:
               </span>
               <span className={`text-xs px-2 py-0.5 rounded font-semibold ${
@@ -389,18 +404,18 @@ export default function ParserUploader({ onExamParsed }) {
                   ? 'bg-emerald-950 text-neon-green border border-neon-green/30'
                   : 'bg-rose-950 text-neon-red border border-neon-red/30'
               }`}>
-                {isReadyToStart ? 'EXTRACCIÓN EXITOSA' : 'PENDIENTE / FORMATO ERRÓNEO'}
+                {isReadyToStart ? 'EXTRACCIÓN EXITOSA' : 'PENDIENTE / SIN DATOS'}
               </span>
             </div>
 
             {opMode === 'standard' ? (
-              standardParseResult.success ? (
+              isReadyToStart ? (
                 <p className="text-xs text-slate-400 mt-1">
-                  Se identificaron <strong className="text-neon-cyan">{standardParseResult.totalCount} preguntas</strong> con sus correspondientes opciones y explicaciones.
+                  Se identificaron <strong className="text-neon-cyan">{standardParseResult.questions.length} preguntas</strong> con sus correspondientes opciones y explicaciones.
                 </p>
               ) : (
-                <p className="text-xs text-neon-red mt-1">
-                  {standardParseResult.error}
+                <p className="text-xs text-slate-400 mt-1">
+                  {standardParseResult.error || 'Selecciona o arrastra un archivo plano para cargar el examen.'}
                 </p>
               )
             ) : (
@@ -426,11 +441,11 @@ export default function ParserUploader({ onExamParsed }) {
               ? opMode === 'standard'
                 ? 'bg-neon-cyan text-black hover:bg-cyan-300 shadow-neon-cyan hover:scale-[1.02] cursor-pointer'
                 : 'bg-neon-magenta text-black hover:bg-rose-400 shadow-neon-magenta hover:scale-[1.02] cursor-pointer'
-              : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed'
+              : 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed disabled:border-slate-700'
           }`}
         >
           <Play className="w-5 h-5 fill-current" />
-          <span>{opMode === 'standard' ? 'INICIAR SIMULADOR ESTÁNDAR' : 'INICIAR SIMULADOR ALEATORIO (125)'}</span>
+          <span>{opMode === 'standard' ? 'INICIAR SIMULADOR ESTÁNDAR' : 'INICIAR SIMULADOR ALEATORIO'}</span>
         </button>
       </div>
 
