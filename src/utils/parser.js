@@ -6,8 +6,8 @@
  */
 
 function parseInlineFormat(normalizedText) {
-  // Dividir por encabezados de pregunta flexibles (ej: ## **Pregunta 1: ...**, **Pregunta 2: ...**, 1. Enunciado)
-  const rawBlocks = normalizedText.split(/(?:^|\n)(?=(?:#{1,6}\s*)?(?:\*\*)?(?:Pregunta|Question|\d+)[.:\s*]+\d*)/i).filter(b => b.trim().length > 0);
+  // Dividir por encabezados de pregunta flexibles (ej: ## Pregunta 1: ..., **Pregunta 2: ...**, Pregunta 1)
+  const rawBlocks = normalizedText.split(/(?:^|\n)(?=(?:#{1,6}\s*)?(?:\*\*)?(?:Pregunta|Question|\d+)\b[.:\s*]*\d*)/i).filter(b => b.trim().length > 0);
 
   const questionsList = [];
 
@@ -23,8 +23,8 @@ function parseInlineFormat(normalizedText) {
     const qNum = headerMatch[1] ? parseInt(headerMatch[1], 10) : idx + 1;
     const body = headerMatch[2].trim();
 
-    // Extraer opciones (ej: - A: texto, - A. texto, A) texto, A. texto)
-    const optionMatches = [...body.matchAll(/(?:^|\n)\s*(?:[-*]\s*)?([A-E])[.:)]\s*([^\n]+(?:\n(?![-*]\s*[A-E][.:)]|###?\s*Respuesta|\*\*Respuesta|Respuesta\s*correcta|Explicación|\d+[.:)]|---).*)*)/gi)];
+    // Extraer opciones (ej: - A: texto, - A. texto, A: texto, A) texto, A. texto)
+    const optionMatches = [...body.matchAll(/(?:^|\n)\s*(?:[-*]\s*)?([A-E])[.:)]\s*([^\n]+(?:\n(?!\s*(?:[-*]\s*)?[A-E][.:)]|#{1,6}\s*Respuesta|\*\*Respuesta|Respuesta\s*(?:correcta)?|Answer|Correct\s*Answer|Explicación|Explanation|Justificación|\d+[.:)]|---).*)*)/gi)];
 
     if (optionMatches.length === 0) return;
 
@@ -44,7 +44,7 @@ function parseInlineFormat(normalizedText) {
     }));
 
     // Extraer respuesta correcta
-    const ansMatch = body.match(/(?:#{1,6}\s*)?(?:\*\*)?(?:Respuesta\s*(?:correcta)?|Answer|Correct\s*Answer)\s*:?\s*(?:\*\*)?\s*([A-E])/i);
+    const ansMatch = body.match(/(?:#{1,6}\s*)?(?:\*\*)?(?:Respuesta\s*(?:correcta)?|Answer|Correct\s*Answer|Solución)\s*:?\s*(?:\*\*)?\s*([A-E])/i);
     const correctAnswer = ansMatch ? ansMatch[1].toUpperCase() : null;
 
     // Extraer explicación
